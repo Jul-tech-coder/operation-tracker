@@ -1,75 +1,96 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format } from 'date-fns';
 
 export default function Home() {
   const [operations, setOperations] = useState([]);
-  const [filteredOperations, setFilteredOperations] = useState([]);
-  const [filterPicoId, setFilterPicoId] = useState('');
-  const [filterUser, setFilterUser] = useState('');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    successfulOperations: 0,
+    errorsMade: 0,
+    errorsFixed: 0,
+    averageBreakTime: 0,
+    averageOperationTime: 0,
+  });
 
   useEffect(() => {
-    // In a real application, this would fetch data from your API
+    // Mock data based on your example
     const mockData = [
-      { id: 1, picoId: 'Pico1', user: 101, operationCount: 50, duration: 120, rotations: [10, 15, 20], timestamp: '2023-07-03T10:00:00' },
-      { id: 2, picoId: 'Pico2', user: 102, operationCount: 45, duration: 110, rotations: [12, 18, 15], timestamp: '2023-07-03T10:15:00' },
-      { id: 3, picoId: 'Pico1', user: 101, operationCount: 55, duration: 130, rotations: [11, 16, 22], timestamp: '2023-07-03T10:30:00' },
-      { id: 4, picoId: 'Pico3', user: 103, operationCount: 60, duration: 140, rotations: [13, 17, 25], timestamp: '2023-07-03T10:45:00' },
-      { id: 5, picoId: 'Pico2', user: 102, operationCount: 48, duration: 115, rotations: [11, 19, 18], timestamp: '2023-07-03T11:00:00' },
+      {
+        id: 1,
+        user: 102,
+        operationDuration: 19.84,
+        rotations: [10, 16],
+        breakDuration: 27.99,
+        expectedRotations: [10, 10],
+        success: false,
+        fixed: true,
+        timestamp: '2023-07-04T10:00:00',
+      },
+      // Add more mock operations here...
     ];
     setOperations(mockData);
-    setFilteredOperations(mockData);
+
+    // Calculate statistics
+    const totalProducts = mockData.length;
+    const successfulOperations = mockData.filter(op => op.success || op.fixed).length;
+    const errorsMade = mockData.filter(op => !op.success).length;
+    const errorsFixed = mockData.filter(op => op.fixed).length;
+    const averageBreakTime = mockData.reduce((acc, op) => acc + op.breakDuration, 0) / totalProducts;
+    const averageOperationTime = mockData.reduce((acc, op) => acc + op.operationDuration, 0) / totalProducts;
+
+    setStats({
+      totalProducts,
+      successfulOperations,
+      errorsMade,
+      errorsFixed,
+      averageBreakTime,
+      averageOperationTime,
+    });
   }, []);
 
-  useEffect(() => {
-    let filtered = operations;
-    if (filterPicoId) {
-      filtered = filtered.filter(op => op.picoId === filterPicoId);
-    }
-    if (filterUser) {
-      filtered = filtered.filter(op => op.user === parseInt(filterUser));
-    }
-    if (dateRange.start && dateRange.end) {
-      filtered = filtered.filter(op => {
-        const opDate = new Date(op.timestamp);
-        return opDate >= new Date(dateRange.start) && opDate <= new Date(dateRange.end);
-      });
-    }
-    setFilteredOperations(filtered);
-  }, [operations, filterPicoId, filterUser, dateRange]);
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      <h1 style={{ color: '#333', textAlign: 'center' }}>Operation Tracker</h1>
+      <h1 style={{ color: '#333', textAlign: 'center' }}>Detailed Operation Tracker</h1>
       
-      <div style={{ marginBottom: '20px' }}>
-        <input 
-          type="text" 
-          placeholder="Filter by Pico ID" 
-          value={filterPicoId} 
-          onChange={(e) => setFilterPicoId(e.target.value)}
-          style={{ marginRight: '10px', padding: '5px' }}
-        />
-        <input 
-          type="text" 
-          placeholder="Filter by User" 
-          value={filterUser} 
-          onChange={(e) => setFilterUser(e.target.value)}
-          style={{ marginRight: '10px', padding: '5px' }}
-        />
-        <input 
-          type="date" 
-          value={dateRange.start} 
-          onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-          style={{ marginRight: '10px', padding: '5px' }}
-        />
-        <input 
-          type="date" 
-          value={dateRange.end} 
-          onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-          style={{ padding: '5px' }}
-        />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
+        <div style={{ width: '48%' }}>
+          <h2 style={{ color: '#666' }}>Operation Statistics</h2>
+          <p>Total Products: {stats.totalProducts}</p>
+          <p>Successful Operations: {stats.successfulOperations}</p>
+          <p>Errors Made: {stats.errorsMade}</p>
+          <p>Errors Fixed: {stats.errorsFixed}</p>
+          <p>Average Break Time: {stats.averageBreakTime.toFixed(2)} seconds</p>
+          <p>Average Operation Time: {stats.averageOperationTime.toFixed(2)} seconds</p>
+        </div>
+        <div style={{ width: '48%', height: '300px' }}>
+          <h2 style={{ color: '#666' }}>Operation Results</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={[
+                  { name: 'Successful', value: stats.successfulOperations },
+                  { name: 'Errors', value: stats.errorsMade },
+                  { name: 'Fixed', value: stats.errorsFixed },
+                ]}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {stats.successfulOperations > 0 && <Cell key={`cell-0`} fill={COLORS[0]} />}
+                {stats.errorsMade > 0 && <Cell key={`cell-1`} fill={COLORS[1]} />}
+                {stats.errorsFixed > 0 && <Cell key={`cell-2`} fill={COLORS[2]} />}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div style={{ marginBottom: '40px' }}>
@@ -78,22 +99,26 @@ export default function Home() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ backgroundColor: '#f2f2f2' }}>
-                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Pico ID</th>
                 <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>User</th>
-                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Operation Count</th>
-                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Duration (s)</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Operation Duration (s)</th>
                 <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Rotations</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Break Duration (s)</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Expected Rotations</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Success</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Fixed</th>
                 <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Timestamp</th>
               </tr>
             </thead>
             <tbody>
-              {filteredOperations.map((op) => (
+              {operations.map((op) => (
                 <tr key={op.id}>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.picoId}</td>
                   <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.user}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.operationCount}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.duration}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.operationDuration.toFixed(2)}</td>
                   <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.rotations.join(', ')}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.breakDuration.toFixed(2)}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.expectedRotations.join(', ')}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.success ? 'Yes' : 'No'}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.fixed ? 'Yes' : 'No'}</td>
                   <td style={{ border: '1px solid #ddd', padding: '12px' }}>{format(new Date(op.timestamp), 'yyyy-MM-dd HH:mm:ss')}</td>
                 </tr>
               ))}
@@ -104,28 +129,43 @@ export default function Home() {
       
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
         <div style={{ width: '48%', height: '300px' }}>
-          <h2 style={{ color: '#666' }}>Operation Count Over Time</h2>
+          <h2 style={{ color: '#666' }}>Operation Duration Over Time</h2>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={filteredOperations}>
+            <LineChart data={operations}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="timestamp" tickFormatter={(timestamp) => format(new Date(timestamp), 'HH:mm')} />
               <YAxis />
               <Tooltip labelFormatter={(timestamp) => format(new Date(timestamp), 'yyyy-MM-dd HH:mm:ss')} />
               <Legend />
-              <Line type="monotone" dataKey="operationCount" stroke="#8884d8" />
+              <Line type="monotone" dataKey="operationDuration" name="Operation Duration" stroke="#8884d8" />
+              <Line type="monotone" dataKey="breakDuration" name="Break Duration" stroke="#82ca9d" />
             </LineChart>
           </ResponsiveContainer>
         </div>
         <div style={{ width: '48%', height: '300px' }}>
-          <h2 style={{ color: '#666' }}>Duration by Pico ID</h2>
+          <h2 style={{ color: '#666' }}>Success Rate by User</h2>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={filteredOperations}>
+            <BarChart data={
+              operations.reduce((acc, op) => {
+                const userIndex = acc.findIndex(item => item.user === op.user);
+                if (userIndex === -1) {
+                  acc.push({ user: op.user, successful: op.success || op.fixed ? 1 : 0, total: 1 });
+                } else {
+                  acc[userIndex].successful += op.success || op.fixed ? 1 : 0;
+                  acc[userIndex].total += 1;
+                }
+                return acc;
+              }, []).map(item => ({
+                user: item.user,
+                successRate: (item.successful / item.total) * 100
+              }))
+            }>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="picoId" />
+              <XAxis dataKey="user" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="duration" fill="#82ca9d" />
+              <Bar dataKey="successRate" fill="#82ca9d" name="Success Rate (%)" />
             </BarChart>
           </ResponsiveContainer>
         </div>

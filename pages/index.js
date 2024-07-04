@@ -102,87 +102,87 @@ export default function Home() {
   }, [selectedDay, selectedUser]);
 
   const Timeline = ({ data }) => {
-    const [hoveredBar, setHoveredBar] = useState(null);
+  const [hoveredBar, setHoveredBar] = useState(null);
 
-    const timelineData = data.flatMap(op => [
-      { type: 'operation', duration: op.operationDuration, startTime: new Date(op.startTime), color: op.success ? '#4CAF50' : (op.fixed ? '#FFC107' : '#F44336'), data: op },
-      { type: 'break', duration: op.breakDuration, startTime: new Date(op.endTime), color: '#BDBDBD', data: op }
-    ]);
+  const timelineData = data.flatMap(op => [
+    { type: 'operation', duration: op.operationDuration, startTime: new Date(op.startTime), color: op.success ? '#4CAF50' : (op.fixed ? '#FFC107' : '#F44336'), data: op },
+    { type: 'break', duration: op.breakDuration, startTime: new Date(op.endTime), color: '#BDBDBD', data: op }
+  ]);
 
-    const totalDuration = 8 * 60 * 60; // 8 hours in seconds
-    const visibleDuration = timelineEnd - timelineStart;
+  const totalDuration = 8 * 60 * 60; // 8 hours in seconds
+  const visibleDuration = timelineEnd - timelineStart;
 
-    const handleWheel = (e) => {
-      e.preventDefault();
-      const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
-      const mousePosition = (e.clientX - timelineRef.current.getBoundingClientRect().left) / timelineRef.current.offsetWidth;
-      const newVisibleDuration = Math.min(Math.max(visibleDuration * zoomFactor, 60), totalDuration);
-      const newStart = Math.max(0, timelineStart + (visibleDuration - newVisibleDuration) * mousePosition);
-      const newEnd = Math.min(totalDuration, newStart + newVisibleDuration);
-      setTimelineStart(newStart);
-      setTimelineEnd(newEnd);
-    };
-
-    return (
-      <div>
-        <div 
-          ref={timelineRef}
-          style={{ position: 'relative', height: '50px', backgroundColor: '#f0f0f0', marginBottom: '20px', overflow: 'hidden' }}
-          onWheel={handleWheel}
-        >
-          {timelineData.map((item, index) => {
-            const startSeconds = differenceInSeconds(item.startTime, subHours(item.startTime, 9));
-            const endSeconds = startSeconds + item.duration;
-            if (endSeconds < timelineStart || startSeconds > timelineEnd) return null;
-
-            const leftPosition = ((Math.max(startSeconds, timelineStart) - timelineStart) / visibleDuration) * 100;
-            const rightPosition = ((Math.min(endSeconds, timelineEnd) - timelineStart) / visibleDuration) * 100;
-            const width = rightPosition - leftPosition;
-
-            return (
-              <div
-                key={index}
-                style={{
-                  position: 'absolute',
-                  left: `${leftPosition}%`,
-                  width: `${width}%`,
-                  height: '100%',
-                  backgroundColor: item.color,
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={() => setHoveredBar(item)}
-                onMouseLeave={() => setHoveredBar(null)}
-              />
-            );
-          })}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <span>{format(addSeconds(new Date(selectedDay), timelineStart), 'HH:mm:ss')}</span>
-          <span>{format(addSeconds(new Date(selectedDay), timelineEnd), 'HH:mm:ss')}</span>
-        </div>
-        {hoveredBar && (
-          <div style={{
-            backgroundColor: 'white',
-            padding: '10px',
-            border: '1px solid #ddd',
-            marginBottom: '20px',
-          }}>
-            <p>{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
-            <p>Duration: {hoveredBar.duration} seconds</p>
-            <p>Start Time: {format(hoveredBar.startTime, 'HH:mm:ss')}</p>
-            {hoveredBar.type === 'operation' && (
-              <>
-                <p>Job: {hoveredBar.data.jobName}</p>
-                <p>Rotations: {hoveredBar.data.rotations.join(', ')}</p>
-                <p>Success: {hoveredBar.data.success ? 'Yes' : 'No'}</p>
-                {!hoveredBar.data.success && <p>Fixed: {hoveredBar.data.fixed ? 'Yes' : 'No'}</p>}
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    );
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
+    const mousePosition = (e.clientX - timelineRef.current.getBoundingClientRect().left) / timelineRef.current.offsetWidth;
+    const newVisibleDuration = Math.min(Math.max(visibleDuration * zoomFactor, 60), totalDuration);
+    const newStart = Math.max(0, timelineStart + (visibleDuration - newVisibleDuration) * mousePosition);
+    const newEnd = Math.min(totalDuration, newStart + newVisibleDuration);
+    setTimelineStart(newStart);
+    setTimelineEnd(newEnd);
   };
+
+  return (
+    <div>
+      <div 
+        ref={timelineRef}
+        style={{ position: 'relative', height: '50px', backgroundColor: '#f0f0f0', marginBottom: '20px', overflow: 'hidden' }}
+        onWheel={handleWheel}
+      >
+        {timelineData.map((item, index) => {
+          const startSeconds = differenceInSeconds(item.startTime, new Date(selectedDay)) - 9 * 3600; // Adjust for 9 AM start
+          const endSeconds = startSeconds + item.duration;
+          if (endSeconds < timelineStart || startSeconds > timelineEnd) return null;
+
+          const leftPosition = ((Math.max(startSeconds, timelineStart) - timelineStart) / visibleDuration) * 100;
+          const rightPosition = ((Math.min(endSeconds, timelineEnd) - timelineStart) / visibleDuration) * 100;
+          const width = rightPosition - leftPosition;
+
+          return (
+            <div
+              key={index}
+              style={{
+                position: 'absolute',
+                left: `${leftPosition}%`,
+                width: `${width}%`,
+                height: '100%',
+                backgroundColor: item.color,
+                cursor: 'pointer',
+              }}
+              onMouseEnter={() => setHoveredBar(item)}
+              onMouseLeave={() => setHoveredBar(null)}
+            />
+          );
+        })}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <span>{format(addHours(new Date(selectedDay), 9 + timelineStart / 3600), 'HH:mm:ss')}</span>
+        <span>{format(addHours(new Date(selectedDay), 9 + timelineEnd / 3600), 'HH:mm:ss')}</span>
+      </div>
+      {hoveredBar && (
+        <div style={{
+          backgroundColor: 'white',
+          padding: '10px',
+          border: '1px solid #ddd',
+          marginBottom: '20px',
+        }}>
+          <p>{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
+          <p>Duration: {hoveredBar.duration} seconds</p>
+          <p>Start Time: {format(hoveredBar.startTime, 'HH:mm:ss')}</p>
+          {hoveredBar.type === 'operation' && (
+            <>
+              <p>Job: {hoveredBar.data.jobName}</p>
+              <p>Rotations: {hoveredBar.data.rotations.join(', ')}</p>
+              <p>Success: {hoveredBar.data.success ? 'Yes' : 'No'}</p>
+              {!hoveredBar.data.success && <p>Fixed: {hoveredBar.data.fixed ? 'Yes' : 'No'}</p>}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
   const uniqueUsers = [...new Set(operations.map(op => op.user))];
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { format, addHours, differenceInSeconds } from 'date-fns';
+import { format, addHours, differenceInSeconds, parseISO } from 'date-fns';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -10,8 +10,8 @@ const generateMockData = (startTime, endTime) => {
   let operationId = 1;
 
   while (currentTime < endTime) {
-    const operationDuration = Math.floor(Math.random() * 300) + 60; // 1-5 minutes
-    const breakDuration = Math.floor(Math.random() * 600) + 300; // 5-15 minutes
+    const operationDuration = Math.floor(Math.random() * 31) + 10; // 10-40 seconds
+    const breakDuration = Math.floor(Math.random() * 51) + 10; // 10-60 seconds
 
     const jobTypes = [
       { rotations: [10, 10], name: "10-10 Fabric" },
@@ -20,7 +20,10 @@ const generateMockData = (startTime, endTime) => {
     ];
 
     const selectedJob = jobTypes[Math.floor(Math.random() * jobTypes.length)];
-    const actualRotations = selectedJob.rotations.map(r => r + Math.floor(Math.random() * 5) - 2); // Add some variation
+    const actualRotations = selectedJob.rotations.map(r => {
+      const errorChance = Math.random();
+      return errorChance < 0.03 ? r + Math.floor(Math.random() * 5) - 2 : r; // 3% chance of error
+    });
 
     const operation = {
       id: operationId++,
@@ -56,6 +59,8 @@ export default function Home() {
     productionByType: {},
   });
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [timelineZoom, setTimelineZoom] = useState(1);
 
   useEffect(() => {
     const startOfDay = new Date(selectedDay);
@@ -66,14 +71,15 @@ export default function Home() {
     setOperations(mockData);
 
     // Calculate statistics
-    const totalProducts = mockData.length;
-    const successfulOperations = mockData.filter(op => op.success || op.fixed).length;
-    const errorsMade = mockData.filter(op => !op.success).length;
-    const errorsFixed = mockData.filter(op => op.fixed).length;
-    const averageBreakTime = mockData.reduce((acc, op) => acc + op.breakDuration, 0) / totalProducts;
-    const averageOperationTime = mockData.reduce((acc, op) => acc + op.operationDuration, 0) / totalProducts;
+    const filteredData = selectedUser ? mockData.filter(op => op.user === selectedUser) : mockData;
+    const totalProducts = filteredData.length;
+    const successfulOperations = filteredData.filter(op => op.success || op.fixed).length;
+    const errorsMade = filteredData.filter(op => !op.success).length;
+    const errorsFixed = filteredData.filter(op => op.fixed).length;
+    const averageBreakTime = filteredData.reduce((acc, op) => acc + op.breakDuration, 0) / totalProducts;
+    const averageOperationTime = filteredData.reduce((acc, op) => acc + op.operationDuration, 0) / totalProducts;
 
-    const productionByType = mockData.reduce((acc, op) => {
+    const productionByType = filteredData.reduce((acc, op) => {
       if (!acc[op.jobName]) acc[op.jobName] = 0;
       if (op.success || op.fixed) acc[op.jobName]++;
       return acc;
@@ -88,60 +94,77 @@ export default function Home() {
       averageOperationTime,
       productionByType,
     });
-  }, [selectedDay]);
+  }, [selectedDay, selectedUser]);
 
   const Timeline = ({ data }) => {
     const [hoveredBar, setHoveredBar] = useState(null);
 
     const timelineData = data.flatMap(op => [
-      { type: 'operation', duration: op.operationDuration, startTime: new Date(op.startTime), color: '#FF6B6B' },
-      { type: 'break', duration: op.breakDuration, startTime: new Date(op.endTime), color: '#4ECDC4' }
+      { type: 'operation', duration: op.operationDuration, startTime: new Date(op.startTime), color: '#FF6B6B', data: op },
+      { type: 'break', duration: op.breakDuration, startTime: new Date(op.endTime), color: '#4ECDC4', data: op }
     ]);
 
     const totalDuration = timelineData.reduce((sum, item) => sum + item.duration, 0);
+    const zoomedDuration = totalDuration / timelineZoom;
+
+    const visibleData = timelineData.filter((_, index) => index < zoomedDuration);
 
     return (
-      <div style={{ position: 'relative', height: '50px', backgroundColor: '#f0f0f0', marginBottom: '20px' }}>
-        {timelineData.map((item, index) => {
-          const widthPercentage = (item.duration / totalDuration) * 100;
-          const leftPosition = timelineData
-            .slice(0, index)
-            .reduce((sum, prevItem) => sum + (prevItem.duration / totalDuration) * 100, 0);
+      <div>
+        <div style={{ marginBottom: '10px' }}>
+          <button onClick={() => setTimelineZoom(prev => Math.min(prev * 2, 32))}>Zoom In</button>
+          <button onClick={() => setTimelineZoom(prev => Math.max(prev / 2, 1))}>Zoom Out</button>
+          <span style={{ marginLeft: '10px' }}>Zoom: {timelineZoom}x</span>
+        </div>
+        <div style={{ position: 'relative', height: '50px', backgroundColor: '#f0f0f0', marginBottom: '20px', overflow: 'hidden' }}>
+          {visibleData.map((item, index) => {
+            const widthPercentage = (item.duration / zoomedDuration) * 100;
+            const leftPosition = visibleData
+              .slice(0, index)
+              .reduce((sum, prevItem) => sum + (prevItem.duration / zoomedDuration) * 100, 0);
 
-          return (
-            <div
-              key={index}
-              style={{
-                position: 'absolute',
-                left: `${leftPosition}%`,
-                width: `${widthPercentage}%`,
-                height: '100%',
-                backgroundColor: item.color,
-                cursor: 'pointer',
-              }}
-              onMouseEnter={() => setHoveredBar(item)}
-              onMouseLeave={() => setHoveredBar(null)}
-            />
-          );
-        })}
+            return (
+              <div
+                key={index}
+                style={{
+                  position: 'absolute',
+                  left: `${leftPosition}%`,
+                  width: `${widthPercentage}%`,
+                  height: '100%',
+                  backgroundColor: item.color,
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={() => setHoveredBar(item)}
+                onMouseLeave={() => setHoveredBar(null)}
+              />
+            );
+          })}
+        </div>
         {hoveredBar && (
           <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: '0',
             backgroundColor: 'white',
             padding: '10px',
             border: '1px solid #ddd',
-            zIndex: 1000,
+            marginBottom: '20px',
           }}>
             <p>{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
             <p>Duration: {hoveredBar.duration} seconds</p>
             <p>Start Time: {format(hoveredBar.startTime, 'HH:mm:ss')}</p>
+            {hoveredBar.type === 'operation' && (
+              <>
+                <p>Job: {hoveredBar.data.jobName}</p>
+                <p>Rotations: {hoveredBar.data.rotations.join(', ')}</p>
+                <p>Success: {hoveredBar.data.success ? 'Yes' : 'No'}</p>
+                {!hoveredBar.data.success && <p>Fixed: {hoveredBar.data.fixed ? 'Yes' : 'No'}</p>}
+              </>
+            )}
           </div>
         )}
       </div>
     );
   };
+
+  const uniqueUsers = [...new Set(operations.map(op => op.user))];
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
@@ -155,9 +178,20 @@ export default function Home() {
           value={selectedDay}
           onChange={(e) => setSelectedDay(e.target.value)}
         />
+        <label htmlFor="userSelect" style={{ marginLeft: '20px' }}>Select Operator: </label>
+        <select
+          id="userSelect"
+          value={selectedUser || ''}
+          onChange={(e) => setSelectedUser(e.target.value ? Number(e.target.value) : null)}
+        >
+          <option value="">All Operators</option>
+          {uniqueUsers.map(user => (
+            <option key={user} value={user}>Operator {user}</option>
+          ))}
+        </select>
       </div>
 
-      <Timeline data={operations} />
+      <Timeline data={operations.filter(op => !selectedUser || op.user === selectedUser)} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
         <div style={{ width: '48%' }}>
@@ -219,18 +253,20 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {operations.map((op) => (
-                <tr key={op.id}>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.user}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.jobName}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.operationDuration.toFixed(2)}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.rotations.join(', ')}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.breakDuration.toFixed(2)}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.expectedRotations.join(', ')}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.success ? 'Yes' : 'No'}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.fixed ? 'Yes' : 'No'}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '12px' }}>{format(new Date(op.startTime), 'HH:mm:ss')}</td>
-                </tr>
+              {operations
+                .filter(op => !selectedUser || op.user === selectedUser)
+                .map((op) => (
+                  <tr key={op.id}>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.user}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.jobName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.operationDuration.toFixed(2)}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.rotations.join(', ')}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.breakDuration.toFixed(2)}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.expectedRotations.join(', ')}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.success ? 'Yes' : 'No'}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.fixed ? 'Yes' : 'No'}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{format(parseISO(op.startTime), 'HH:mm:ss')}</td>
+                  </tr>
               ))}
             </tbody>
           </table>

@@ -1,48 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { format, addHours, differenceInSeconds, parseISO, addSeconds } from 'date-fns';
+import { format, addHours, differenceInSeconds, parseISO, addSeconds, subHours } from 'date-fns';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const generateMockData = (startTime, endTime) => {
   const data = [];
-  let currentTime = startTime;
+  const users = [101, 102, 103, 104, 105]; // 5 operators
   let operationId = 1;
 
-  while (currentTime < endTime) {
-    const operationDuration = Math.floor(Math.random() * 31) + 10; // 10-40 seconds
-    const breakDuration = Math.floor(Math.random() * 51) + 10; // 10-60 seconds
+  users.forEach(user => {
+    let currentTime = startTime;
+    while (currentTime < endTime) {
+      const operationDuration = Math.floor(Math.random() * 31) + 10; // 10-40 seconds
+      const breakDuration = Math.floor(Math.random() * 51) + 10; // 10-60 seconds
 
-    const jobTypes = [
-      { rotations: [10, 10], name: "10-10 Fabric" },
-      { rotations: [15, 15, 15, 15], name: "15-15-15-15 Fabric" },
-      { rotations: [20, 20], name: "20-20 Fabric" },
-    ];
+      const jobTypes = [
+        { rotations: [10, 10], name: "10-10 Fabric" },
+        { rotations: [15, 15, 15, 15], name: "15-15-15-15 Fabric" },
+        { rotations: [20, 20], name: "20-20 Fabric" },
+      ];
 
-    const selectedJob = jobTypes[Math.floor(Math.random() * jobTypes.length)];
-    const isError = Math.random() < 0.03; // 3% chance of error
-    const actualRotations = isError 
-      ? selectedJob.rotations.map(r => r + Math.floor(Math.random() * 5) - 2)
-      : [...selectedJob.rotations];
+      const selectedJob = jobTypes[Math.floor(Math.random() * jobTypes.length)];
+      const isError = Math.random() < 0.03; // 3% chance of error
+      const actualRotations = isError 
+        ? selectedJob.rotations.map(r => r + Math.floor(Math.random() * 5) - 2)
+        : [...selectedJob.rotations];
 
-    const operation = {
-      id: operationId++,
-      user: Math.floor(Math.random() * 5) + 101, // Users 101-105
-      operationDuration: operationDuration,
-      rotations: actualRotations,
-      breakDuration: breakDuration,
-      expectedRotations: selectedJob.rotations,
-      jobName: selectedJob.name,
-      success: !isError,
-      fixed: isError && Math.random() < 0.7, // 70% chance of fixing if there was an error
-      startTime: currentTime.toISOString(),
-      endTime: addSeconds(currentTime, operationDuration).toISOString(),
-    };
+      const operation = {
+        id: operationId++,
+        user: user,
+        operationDuration: operationDuration,
+        rotations: actualRotations,
+        breakDuration: breakDuration,
+        expectedRotations: selectedJob.rotations,
+        jobName: selectedJob.name,
+        success: !isError,
+        fixed: isError && Math.random() < 0.7, // 70% chance of fixing if there was an error
+        startTime: currentTime.toISOString(),
+        endTime: addSeconds(currentTime, operationDuration).toISOString(),
+      };
 
-    data.push(operation);
+      data.push(operation);
 
-    currentTime = addSeconds(currentTime, operationDuration + breakDuration);
-  }
+      currentTime = addSeconds(currentTime, operationDuration + breakDuration);
+    }
+  });
 
   return data;
 };
@@ -128,7 +131,7 @@ export default function Home() {
           onWheel={handleWheel}
         >
           {timelineData.map((item, index) => {
-            const startSeconds = differenceInSeconds(item.startTime, new Date(selectedDay));
+            const startSeconds = differenceInSeconds(item.startTime, subHours(item.startTime, 9));
             const endSeconds = startSeconds + item.duration;
             if (endSeconds < timelineStart || startSeconds > timelineEnd) return null;
 
@@ -277,7 +280,6 @@ export default function Home() {
                     <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.user}</td>
                     <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.jobName}</td>
                     <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.operationDuration.toFixed(2)}</td>
-                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.rotations.join(', ')}</td>
                     <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.breakDuration.toFixed(2)}</td>
                     <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.expectedRotations.join(', ')}</td>
                     <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.success ? 'Yes' : 'No'}</td>

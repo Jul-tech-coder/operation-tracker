@@ -210,7 +210,85 @@ export default function Home() {
 
       <Timeline data={operations.filter(op => !selectedUser || op.user === selectedUser)} />
 
-      {/* Rest of the component remains the same */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
+        <div style={{ width: '48%' }}>
+          <h2 style={{ color: '#666' }}>Operation Statistics</h2>
+          <p>Total Products: {stats.totalProducts}</p>
+          <p>Successful Operations: {stats.successfulOperations}</p>
+          <p>Errors Made: {stats.errorsMade}</p>
+          <p>Errors Fixed: {stats.errorsFixed}</p>
+          <p>Average Break Time: {stats.averageBreakTime.toFixed(2)} seconds</p>
+          <p>Average Operation Time: {stats.averageOperationTime.toFixed(2)} seconds</p>
+          <h3>Production by Type:</h3>
+          {Object.entries(stats.productionByType).map(([type, count]) => (
+            <p key={type}>{type}: {count}</p>
+          ))}
+        </div>
+        <div style={{ width: '48%', height: '300px' }}>
+          <h2 style={{ color: '#666' }}>Operation Results</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={[
+                  { name: 'Successful', value: stats.successfulOperations },
+                  { name: 'Errors', value: stats.errorsMade },
+                  { name: 'Fixed', value: stats.errorsFixed },
+                ]}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {stats.successfulOperations > 0 && <Cell key={`cell-0`} fill={COLORS[0]} />}
+                {stats.errorsMade > 0 && <Cell key={`cell-1`} fill={COLORS[1]} />}
+                {stats.errorsFixed > 0 && <Cell key={`cell-2`} fill={COLORS[2]} />}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '40px' }}>
+        <h2 style={{ color: '#666' }}>Recent Operations</h2>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f2f2f2' }}>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>User</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Job Name</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Operation Duration (s)</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Rotations</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Break Duration (s)</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Expected Rotations</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Success</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Fixed</th>
+                <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left' }}>Start Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {operations
+                .filter(op => !selectedUser || op.user === selectedUser)
+                .map((op) => (
+                  <tr key={op.id}>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.user}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.jobName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.operationDuration.toFixed(2)}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.rotations.join(', ')}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.breakDuration.toFixed(2)}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.expectedRotations.join(', ')}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.success ? 'Yes' : 'No'}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{op.fixed ? 'Yes' : 'No'}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>{format(parseISO(op.startTime), 'HH:mm:ss')}</td>
+                  </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

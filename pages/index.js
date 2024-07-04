@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { format, parseISO, addHours } from 'date-fns';
+import { format, parseISO, addHours, differenceInSeconds } from 'date-fns';
 
 const COLORS = ['#4CAF50', '#FFC107', '#F44336', '#2196F3'];
 
@@ -10,7 +10,7 @@ const generateMockData = (startTime, endTime) => {
   let operationId = 1;
 
   users.forEach(user => {
-    let currentTime = startTime;
+    let currentTime = new Date(startTime);
     while (currentTime < endTime) {
       const operationDuration = Math.floor(Math.random() * 31) + 10; // 10-40 seconds
       const breakDuration = Math.floor(Math.random() * 51) + 10; // 10-60 seconds
@@ -38,12 +38,12 @@ const generateMockData = (startTime, endTime) => {
         success: !isError,
         fixed: isError && Math.random() < 0.7, // 70% chance of fixing if there was an error
         startTime: currentTime.toISOString(),
-        endTime: addSeconds(currentTime, operationDuration).toISOString(),
+        endTime: new Date(currentTime.getTime() + operationDuration * 1000).toISOString(),
       };
 
       data.push(operation);
 
-      currentTime = addSeconds(currentTime, operationDuration + breakDuration);
+      currentTime = new Date(currentTime.getTime() + (operationDuration + breakDuration) * 1000);
     }
   });
 
@@ -63,7 +63,7 @@ export default function Home() {
   });
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [timeRange, setTimeRange] = useState({ start: '09:00', end: '17:00' });;
+  const [timeRange, setTimeRange] = useState({ start: '09:00', end: '17:00' });
 
   useEffect(() => {
     const startOfDay = new Date(selectedDay);
@@ -289,7 +289,7 @@ export default function Home() {
                     <td className="px-4 py-2">{op.fixed ? 'Yes' : 'No'}</td>
                     <td className="px-4 py-2">{format(parseISO(op.startTime), 'HH:mm:ss')}</td>
                   </tr>
-              ))}
+                ))}
             </tbody>
           </table>
         </div>

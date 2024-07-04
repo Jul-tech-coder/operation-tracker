@@ -112,28 +112,28 @@ export default function Home() {
     const totalDuration = (endTime - startTime) / 1000; // in seconds
 
     return (
-      <div className="bg-white p-4 rounded-lg shadow-lg">
-        <div className="flex justify-between mb-4">
+      <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Start Time:</label>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>Start Time:</label>
             <input
               type="time"
               value={timeRange.start}
               onChange={(e) => setTimeRange(prev => ({ ...prev, start: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              style={{ display: 'block', width: '100%', padding: '0.5rem', border: '1px solid #D1D5DB', borderRadius: '0.25rem' }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">End Time:</label>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>End Time:</label>
             <input
               type="time"
               value={timeRange.end}
               onChange={(e) => setTimeRange(prev => ({ ...prev, end: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              style={{ display: 'block', width: '100%', padding: '0.5rem', border: '1px solid #D1D5DB', borderRadius: '0.25rem' }}
             />
           </div>
         </div>
-        <div className="relative h-16 bg-gray-200 rounded-lg overflow-hidden">
+        <div style={{ position: 'relative', height: '4rem', backgroundColor: '#E5E7EB', borderRadius: '0.5rem', overflow: 'hidden' }}>
           {timelineData.map((item, index) => {
             const itemStart = new Date(item.startTime);
             if (itemStart < startTime || itemStart > endTime) return null;
@@ -157,13 +157,13 @@ export default function Home() {
             );
           })}
         </div>
-        <div className="flex justify-between mt-2 text-sm text-gray-600">
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.875rem', color: '#6B7280' }}>
           <span>{format(startTime, 'HH:mm:ss')}</span>
           <span>{format(endTime, 'HH:mm:ss')}</span>
         </div>
         {hoveredBar && (
-          <div className="mt-4 p-3 bg-gray-100 rounded-lg">
-            <p className="font-semibold">{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
+          <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#F3F4F6', borderRadius: '0.5rem' }}>
+            <p style={{ fontWeight: '600' }}>{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
             <p>Duration: {hoveredBar.duration} seconds</p>
             <p>Start Time: {format(hoveredBar.startTime, 'HH:mm:ss')}</p>
             {hoveredBar.type === 'operation' && (
@@ -181,29 +181,29 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">Operation Tracker</h1>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #EBF4FF, #F3E8FF, #FDF2F8)', padding: '3rem 1rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '3rem', color: '#1F2937' }}>Operation Tracker</h1>
         
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex justify-between items-center mb-6">
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', padding: '1.5rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <div>
-              <label htmlFor="dateSelect" className="block text-sm font-medium text-gray-700 mb-1">Select Date:</label>
+              <label htmlFor="dateSelect" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>Select Date:</label>
               <input 
                 type="date" 
                 id="dateSelect"
                 value={selectedDay}
                 onChange={(e) => setSelectedDay(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                style={{ display: 'block', width: '100%', padding: '0.5rem', border: '1px solid #D1D5DB', borderRadius: '0.25rem' }}
               />
             </div>
             <div>
-              <label htmlFor="userSelect" className="block text-sm font-medium text-gray-700 mb-1">Select Operator:</label>
+              <label htmlFor="userSelect" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>Select Operator:</label>
               <select
                 id="userSelect"
                 value={selectedUser || ''}
                 onChange={(e) => setSelectedUser(e.target.value ? Number(e.target.value) : null)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                style={{ display: 'block', width: '100%', padding: '0.5rem', border: '1px solid #D1D5DB', borderRadius: '0.25rem' }}
               >
                 <option value="">All Operators</option>
                 {[...new Set(operations.map(op => op.user))].map(user => (
@@ -216,22 +216,22 @@ export default function Home() {
           <Timeline data={operations.filter(op => !selectedUser || op.user === selectedUser)} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Operation Statistics</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', padding: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>Operation Statistics</h2>
             <p>Total Products: {stats.totalProducts}</p>
             <p>Successful Operations: {stats.successfulOperations}</p>
             <p>Errors Made: {stats.errorsMade}</p>
             <p>Errors Fixed: {stats.errorsFixed}</p>
             <p>Average Break Time: {stats.averageBreakTime.toFixed(2)} seconds</p>
             <p>Average Operation Time: {stats.averageOperationTime.toFixed(2)} seconds</p>
-            <h3 className="font-semibold mt-4 mb-2">Production by Type:</h3>
+            <h3 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>Production by Type:</h3>
             {Object.entries(stats.productionByType).map(([type, count]) => (
               <p key={type}>{type}: {count}</p>
             ))}
           </div>
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Operation Results</h2>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', padding: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>Operation Results</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -258,36 +258,36 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 overflow-x-auto">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Recent Operations</h2>
-          <table className="min-w-full">
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', padding: '1.5rem', overflowX: 'auto' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>Recent Operations</h2>
+          <table style={{ minWidth: '100%' }}>
             <thead>
-              <tr className="bg-gray-100">
-                <th className="px-4 py-2 text-left">User</th>
-                <th className="px-4 py-2 text-left">Job Name</th>
-                <th className="px-4 py-2 text-left">Operation Duration (s)</th>
-                <th className="px-4 py-2 text-left">Rotations</th>
-                <th className="px-4 py-2 text-left">Break Duration (s)</th>
-                <th className="px-4 py-2 text-left">Expected Rotations</th>
-                <th className="px-4 py-2 text-left">Success</th>
-                <th className="px-4 py-2 text-left">Fixed</th>
-                <th className="px-4 py-2 text-left">Start Time</th>
+              <tr style={{ backgroundColor: '#F3F4F6' }}>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>User</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Job Name</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Operation Duration (s)</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Rotations</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Break Duration (s)</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Expected Rotations</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Success</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Fixed</th>
+                <th style={{ padding: '0.5rem 1rem', textAlign: 'left' }}>Start Time</th>
               </tr>
             </thead>
             <tbody>
               {operations
                 .filter(op => !selectedUser || op.user === selectedUser)
                 .map((op) => (
-                  <tr key={op.id} className="border-b">
-                    <td className="px-4 py-2">{op.user}</td>
-                    <td className="px-4 py-2">{op.jobName}</td>
-                    <td className="px-4 py-2">{op.operationDuration.toFixed(2)}</td>
-                    <td className="px-4 py-2">{op.rotations.join(', ')}</td>
-                    <td className="px-4 py-2">{op.breakDuration.toFixed(2)}</td>
-                    <td className="px-4 py-2">{op.expectedRotations.join(', ')}</td>
-                    <td className="px-4 py-2">{op.success ? 'Yes' : 'No'}</td>
-                    <td className="px-4 py-2">{op.fixed ? 'Yes' : 'No'}</td>
-                    <td className="px-4 py-2">{format(parseISO(op.startTime), 'HH:mm:ss')}</td>
+                  <tr key={op.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.user}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.jobName}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.operationDuration.toFixed(2)}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.rotations.join(', ')}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.breakDuration.toFixed(2)}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.expectedRotations.join(', ')}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.success ? 'Yes' : 'No'}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{op.fixed ? 'Yes' : 'No'}</td>
+                    <td style={{ padding: '0.5rem 1rem' }}>{format(parseISO(op.startTime), 'HH:mm:ss')}</td>
                   </tr>
                 ))}
             </tbody>

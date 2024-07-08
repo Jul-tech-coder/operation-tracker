@@ -66,6 +66,12 @@ export default function Home() {
   const [timeRange, setTimeRange] = useState({ start: '09:00', end: '17:00' });
   const [hoveredBar, setHoveredBar] = useState(null);
 
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
   useEffect(() => {
     const startOfDay = new Date(selectedDay);
     startOfDay.setHours(9, 0, 0, 0); // Assume 9 AM start
@@ -160,7 +166,7 @@ export default function Home() {
           <span>{format(startTime, 'HH:mm:ss')}</span>
           <span>{format(endTime, 'HH:mm:ss')}</span>
         </div>
-        <div style={{ height: '150px', marginTop: '1rem', padding: '0.75rem', backgroundColor: '#F3F4F6', borderRadius: '0.5rem' }}>
+        <div style={{ height: '150px', marginTop: '1rem', padding: '0.75rem', backgroundColor: '#F3F4F6', borderRadius: '0.5rem', overflowY: 'auto' }}>
           {hoveredBar ? (
             <>
               <p style={{ fontWeight: '600' }}>{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
@@ -226,8 +232,8 @@ export default function Home() {
             <p>Successful Operations: {stats.successfulOperations}</p>
             <p>Errors Made: {stats.errorsMade}</p>
             <p>Errors Fixed: {stats.errorsFixed}</p>
-            <p>Total Work Time: {stats.totalWorkTime.toFixed(2)} seconds</p>
-            <p>Total Break Time: {stats.totalBreakTime.toFixed(2)} seconds</p>
+            <p>Total Work Time: {formatTime(stats.totalWorkTime)}</p>
+            <p>Total Break Time: {formatTime(stats.totalBreakTime)}</p>
             <h3 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>Production by Type:</h3>
             {Object.entries(stats.productionByType).map(([type, count]) => (
               <p key={type}>{type}: {count}</p>

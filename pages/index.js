@@ -119,7 +119,24 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        {/* Time range inputs (unchanged) */}
+        <div>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>Start Time:</label>
+          <input
+            type="time"
+            value={timeRange.start}
+            onChange={(e) => setTimeRange(prev => ({ ...prev, start: e.target.value }))}
+            style={{ display: 'block', width: '100%', padding: '0.5rem', border: '1px solid #D1D5DB', borderRadius: '0.25rem' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>End Time:</label>
+          <input
+            type="time"
+            value={timeRange.end}
+            onChange={(e) => setTimeRange(prev => ({ ...prev, end: e.target.value }))}
+            style={{ display: 'block', width: '100%', padding: '0.5rem', border: '1px solid #D1D5DB', borderRadius: '0.25rem' }}
+          />
+        </div>
       </div>
       <div style={{ position: 'relative', height: '4rem', backgroundColor: '#E5E7EB', borderRadius: '0.5rem', overflow: 'hidden' }}>
         {timelineData.map((item, index) => {
@@ -171,7 +188,6 @@ export default function Home() {
     </div>
   );
 };
-
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #EBF4FF, #F3E8FF, #FDF2F8)', padding: '3rem 1rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>

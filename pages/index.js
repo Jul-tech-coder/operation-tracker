@@ -106,7 +106,7 @@ export default function Home() {
     });
   }, [selectedDay, selectedUser]);
 
-  const Timeline = ({ data }) => {
+  const Timeline = ({ data, timeRange, setTimeRange }) => {
   const timelineData = data.flatMap(op => [
     { type: 'operation', duration: op.operationDuration, startTime: new Date(op.startTime), color: op.success ? '#4CAF50' : (op.fixed ? '#FFC107' : '#F44336'), data: op },
     { type: 'break', duration: op.breakDuration, startTime: new Date(op.endTime), color: '#BDBDBD', data: op }
@@ -221,7 +221,11 @@ export default function Home() {
             </div>
           </div>
 
-          <Timeline data={operations.filter(op => !selectedUser || op.user === selectedUser)} />
+          <Timeline 
+  data={operations.filter(op => !selectedUser || op.user === selectedUser)}
+  timeRange={timeRange}
+  setTimeRange={setTimeRange}
+/>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>

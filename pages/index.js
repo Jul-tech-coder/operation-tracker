@@ -57,13 +57,14 @@ export default function Home() {
     successfulOperations: 0,
     errorsMade: 0,
     errorsFixed: 0,
-    averageBreakTime: 0,
-    averageOperationTime: 0,
+    totalWorkTime: 0,
+    totalBreakTime: 0,
     productionByType: {},
   });
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [timeRange, setTimeRange] = useState({ start: '09:00', end: '17:00' });
+  const [hoveredBar, setHoveredBar] = useState(null);
 
   useEffect(() => {
     const startOfDay = new Date(selectedDay);
@@ -79,8 +80,8 @@ export default function Home() {
     const successfulOperations = filteredData.filter(op => op.success).length;
     const errorsMade = filteredData.filter(op => !op.success).length;
     const errorsFixed = filteredData.filter(op => !op.success && op.fixed).length;
-    const averageBreakTime = filteredData.reduce((acc, op) => acc + op.breakDuration, 0) / totalProducts;
-    const averageOperationTime = filteredData.reduce((acc, op) => acc + op.operationDuration, 0) / totalProducts;
+    const totalWorkTime = filteredData.reduce((acc, op) => acc + op.operationDuration, 0);
+    const totalBreakTime = filteredData.reduce((acc, op) => acc + op.breakDuration, 0);
 
     const productionByType = filteredData.reduce((acc, op) => {
       if (!acc[op.jobName]) acc[op.jobName] = 0;
@@ -93,15 +94,13 @@ export default function Home() {
       successfulOperations,
       errorsMade,
       errorsFixed,
-      averageBreakTime,
-      averageOperationTime,
+      totalWorkTime,
+      totalBreakTime,
       productionByType,
     });
   }, [selectedDay, selectedUser]);
 
   const Timeline = ({ data }) => {
-    const [hoveredBar, setHoveredBar] = useState(null);
-
     const timelineData = data.flatMap(op => [
       { type: 'operation', duration: op.operationDuration, startTime: new Date(op.startTime), color: op.success ? '#4CAF50' : (op.fixed ? '#FFC107' : '#F44336'), data: op },
       { type: 'break', duration: op.breakDuration, startTime: new Date(op.endTime), color: '#BDBDBD', data: op }
@@ -161,21 +160,25 @@ export default function Home() {
           <span>{format(startTime, 'HH:mm:ss')}</span>
           <span>{format(endTime, 'HH:mm:ss')}</span>
         </div>
-        {hoveredBar && (
-          <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#F3F4F6', borderRadius: '0.5rem' }}>
-            <p style={{ fontWeight: '600' }}>{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
-            <p>Duration: {hoveredBar.duration} seconds</p>
-            <p>Start Time: {format(hoveredBar.startTime, 'HH:mm:ss')}</p>
-            {hoveredBar.type === 'operation' && (
-              <>
-                <p>Job: {hoveredBar.data.jobName}</p>
-                <p>Rotations: {hoveredBar.data.rotations.join(', ')}</p>
-                <p>Success: {hoveredBar.data.success ? 'Yes' : 'No'}</p>
-                {!hoveredBar.data.success && <p>Fixed: {hoveredBar.data.fixed ? 'Yes' : 'No'}</p>}
-              </>
-            )}
-          </div>
-        )}
+        <div style={{ height: '150px', marginTop: '1rem', padding: '0.75rem', backgroundColor: '#F3F4F6', borderRadius: '0.5rem' }}>
+          {hoveredBar ? (
+            <>
+              <p style={{ fontWeight: '600' }}>{hoveredBar.type === 'operation' ? 'Operation' : 'Break'}</p>
+              <p>Duration: {hoveredBar.duration} seconds</p>
+              <p>Start Time: {format(hoveredBar.startTime, 'HH:mm:ss')}</p>
+              {hoveredBar.type === 'operation' && (
+                <>
+                  <p>Job: {hoveredBar.data.jobName}</p>
+                  <p>Rotations: {hoveredBar.data.rotations.join(', ')}</p>
+                  <p>Success: {hoveredBar.data.success ? 'Yes' : 'No'}</p>
+                  {!hoveredBar.data.success && <p>Fixed: {hoveredBar.data.fixed ? 'Yes' : 'No'}</p>}
+                </>
+              )}
+            </>
+          ) : (
+            <p>Hover over a bar to see details</p>
+          )}
+        </div>
       </div>
     );
   };
@@ -223,38 +226,61 @@ export default function Home() {
             <p>Successful Operations: {stats.successfulOperations}</p>
             <p>Errors Made: {stats.errorsMade}</p>
             <p>Errors Fixed: {stats.errorsFixed}</p>
-            <p>Average Break Time: {stats.averageBreakTime.toFixed(2)} seconds</p>
-            <p>Average Operation Time: {stats.averageOperationTime.toFixed(2)} seconds</p>
+            <p>Total Work Time: {stats.totalWorkTime.toFixed(2)} seconds</p>
+            <p>Total Break Time: {stats.totalBreakTime.toFixed(2)} seconds</p>
             <h3 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>Production by Type:</h3>
             {Object.entries(stats.productionByType).map(([type, count]) => (
               <p key={type}>{type}: {count}</p>
             ))}
           </div>
           <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>Operation Results</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: 'Successful', value: stats.successfulOperations },
-                    { name: 'Errors', value: stats.errorsMade },
-                    { name: 'Fixed', value: stats.errorsFixed },
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {stats.successfulOperations > 0 && <Cell key={`cell-0`} fill={COLORS[0]} />}
-                  {stats.errorsMade > 0 && <Cell key={`cell-1`} fill={COLORS[1]} />}
-                  {stats.errorsFixed > 0 && <Cell key={`cell-2`} fill={COLORS[2]} />}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>Operation Results and Break Time</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              <ResponsiveContainer width="45%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Successful', value: stats.successfulOperations },
+                      { name: 'Errors', value: stats.errorsMade },
+                      { name: 'Fixed', value: stats.errorsFixed },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {stats.successfulOperations > 0 && <Cell key={`cell-0`} fill={COLORS[0]} />}
+                    {stats.errorsMade > 0 && <Cell key={`cell-1`} fill={COLORS[1]} />}
+                    {stats.errorsFixed > 0 && <Cell key={`cell-2`} fill={COLORS[2]} />}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+              <ResponsiveContainer width="45%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Work Time', value: stats.totalWorkTime },
+                      { name: 'Break Time', value: stats.totalBreakTime },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell key={`cell-0`} fill={COLORS[0]} />
+                    <Cell key={`cell-1`} fill={COLORS[3]} />
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
